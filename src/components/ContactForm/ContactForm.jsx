@@ -1,58 +1,62 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { addContact } from '../../redux/contactsSlice';
+import { addContact } from 'redux-items/operations';
 import Notiflix from 'notiflix';
+import { selectContacts } from 'redux-items/selectors';
 import { Form, Input, Text, Button } from './ContactForm.styled';
 
-function ContactForm() {
+const ContactForm = () => {
   const dispatch = useDispatch();
-  const contacts = useSelector(state => state.contacts);
+  const contacts = useSelector(selectContacts);
   const [name, setName] = useState('');
-  const [number, setNumber] = useState('');
-
-  const handleNameChange = event => {
-    setName(event.target.value);
-  };
-
-  const handleNumberChange = event => {
-    setNumber(event.target.value);
-  };
+  const [phone, setPhone] = useState('');
 
   const handleSubmit = event => {
     event.preventDefault();
-    if (name.trim() === '' || number.trim() === '') {
-      return;
-    }
+
+    const contact = {
+      name: name,
+      phone: phone,
+    };
 
     const isContactExist = contacts.find(
-      contact => contact.name.toLowerCase() === name.toLowerCase()
+      ({ name }) => name.toLowerCase() === contact.name.toLowerCase()
     );
 
     if (isContactExist) {
       Notiflix.Report.warning(
         'Alert',
-        `Contact with name ${name} already exists!`,
+        `Contact with name ${contact.name} already exists!`,
         'Ok'
       );
       return;
     }
 
-    const isNumberExist = contacts.find(
-      contact => contact.number.replace(/\D/g, '') === number.replace(/\D/g, '')
+    const isPhoneExist = contacts.find(
+      ({ phone }) =>
+        contact.phone.replace(/\D/g, '') === phone.replace(/\D/g, '')
     );
 
-    if (isNumberExist) {
+    if (isPhoneExist) {
       Notiflix.Report.warning(
         'Alert',
-        `Number ${number} is already in contacts!`,
+        `Number ${contact.phone} is already in contacts!`,
         'Ok'
       );
       return;
     }
 
-    dispatch(addContact(name, number));
+    dispatch(addContact(contact));
     setName('');
-    setNumber('');
+    setPhone('');
+  };
+
+  const handleNameChange = event => {
+    setName(event.target.value);
+  };
+
+  const handlePhoneChange = event => {
+    setPhone(event.target.value);
   };
 
   return (
@@ -61,9 +65,7 @@ function ContactForm() {
       <Input
         type="text"
         name="name"
-        pattern="^[a-zA-Zа-яА-Я]+([' \-][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*$"
-        title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
-        required
+        placeholder="Enter name"
         value={name}
         onChange={handleNameChange}
       />
@@ -71,12 +73,11 @@ function ContactForm() {
       <Text>Number</Text>
       <Input
         type="tel"
-        name="number"
-        pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
-        title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
-        required
-        value={number}
-        onChange={handleNumberChange}
+        name="phone"
+        placeholder="Enter phone number"
+        value={phone}
+        onChange={handlePhoneChange}
+
       />
 
       <Button type="submit">
@@ -84,6 +85,6 @@ function ContactForm() {
       </Button>
     </Form>
   );
-}
+};
 
 export default ContactForm;
